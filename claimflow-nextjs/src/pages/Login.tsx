@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth, ROLES, Role, ROLE_ROUTES } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { User, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Login() {
@@ -9,7 +9,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+ 
   const { login } = useAuth();
   const router = useRouter();
 
@@ -113,7 +113,7 @@ export default function Login() {
                 </label>
                 <div className="relative">
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type="password"
                     value={password}
                     onChange={e => { setPassword(e.target.value); setError(''); }}
                     placeholder="Min 4 characters"

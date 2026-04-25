@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ROLE_TO_STAGE } from '@/lib/stageMapping';
 import { useRouter } from 'next/navigation';
-import { Bell, Moon, Sun, ChevronDown, Settings, LogOut } from 'lucide-react';
+ import { Bell, Moon, Sun, ChevronDown, LogOut } from 'lucide-react';
 
 interface Notification {
   id: string;
