@@ -1,0 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 154 100% 18%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 154 100% 18%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5% 26%;
+    --sidebar-primary: 154 100% 18%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 154 100% 18%;
+
+    --slic-green: 154 100% 18%;
+    --slic-action: 154 100% 15%;
+    --slic-action-hover: 154 100% 12%;
+    --status-success: 142 76% 36%;
+    --status-pending: 48 96% 53%;
+    --status-error: 0 84% 60%;
+    --status-info: 217 91% 60%;
+
+    --card-blue: 217 91% 60%;
+    --card-orange: 36 100% 50%;
+    --card-red: 0 84% 60%;
+    --card-green: 142 76% 36%;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 222 47% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 47% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 154 100% 30%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 154 100% 30%;
+
+    --slic-green: 154 100% 30%;
+    --slic-action: 154 100% 25%;
+    --slic-action-hover: 154 100% 20%;
+    --status-success: 142 76% 40%;
+    --status-pending: 48 96% 53%;
+    --status-error: 0 84% 55%;
+    --status-info: 217 91% 60%;
+
+    --card-blue: 217 91% 50%;
+    --card-orange: 36 100% 45%;
+    --card-red: 0 84% 50%;
+    --card-green: 142 76% 36%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .stat-card {
+    @apply rounded-xl p-5 text-white shadow-md relative overflow-hidden transition-transform hover:scale-[1.02];
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .stat-card-blue {
+    background: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 50%));
+  }
+  .stat-card-orange {
+    background: linear-gradient(135deg, hsl(36 100% 50%), hsl(36 100% 42%));
+  }
+  .stat-card-red {
+    background: linear-gradient(135deg, hsl(0 84% 60%), hsl(0 84% 50%));
+  }
+  .stat-card-green {
+    background: linear-gradient(135deg, hsl(142 76% 36%), hsl(142 76% 28%));
+  }
+
+  .action-btn {
+    @apply px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm;
+    background-color: hsl(var(--slic-action));
+    color: white;
+  }
+  .action-btn:hover {
+    background-color: hsl(var(--slic-action-hover));
+    @apply shadow-md;
+  }
+  .action-btn:active {
+    transform: translateY(1px);
+  }
+  .action-btn:disabled {
+    @apply opacity-60 cursor-not-allowed;
+  }
+
+  .action-btn-error {
+    @apply px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm;
+    background-color: hsl(var(--status-error));
+    color: white;
+  }
+  .action-btn-error:hover {
+    background-color: hsl(0 84% 50%);
+    @apply shadow-md;
+  }
+
+  .action-btn-done {
+    @apply px-4 py-2 rounded-lg text-sm font-bold shadow-sm;
+    background-color: hsl(var(--status-success));
+    color: white;
+    cursor: default;
+  }
+  .action-btn-error-done {
+    @apply px-4 py-2 rounded-lg text-sm font-bold shadow-sm;
+    background-color: hsl(var(--status-error));
+    color: white;
+    cursor: default;
+  }
+
+  .status-badge {
+    @apply px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide;
+  }
+  .status-completed {
+    background-color: hsl(var(--status-success));
+    color: white;
+  }
+  .status-pending {
+    background-color: hsl(var(--status-pending));
+    color: hsl(222 47% 11%);
+  }
+  .status-error {
+    background-color: hsl(var(--status-error));
+    color: white;
+  }
+  .status-missing {
+    background-color: hsl(var(--status-error));
+    color: white;
+  }
+
+  .table-header {
+    @apply bg-muted text-muted-foreground font-bold uppercase tracking-wider text-xs;
+  }
+  .table-row-hover {
+    @apply hover:bg-muted/50 transition-colors;
+  }
+}
