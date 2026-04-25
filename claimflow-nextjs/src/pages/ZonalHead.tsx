@@ -3,7 +3,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import StatsCard from '@/components/StatsCard';
 import StatusBadge from '@/components/StatusBadge';
 import { supabase } from '@/integrations/supabase/client';
-import { ROLE_TO_STAGE, STAGE_TO_ROLE, getRoleDisplayName } from '@/lib/stageMapping';
+import { ROLE_TO_STAGE, getRoleDisplayName } from '@/lib/stageMapping';
 import { ClaimStatus } from '@/contexts/ClaimContext';
 import { Role } from '@/contexts/AuthContext';
 import { FileText, Clock, CheckCircle, AlertCircle, ChevronDown, ChevronRight, Download } from 'lucide-react';

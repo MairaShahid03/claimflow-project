@@ -1,3 +1,4 @@
+'use client';
 import React, { useState } from 'react';
 import { useAuth, ROLES, Role, ROLE_ROUTES } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';

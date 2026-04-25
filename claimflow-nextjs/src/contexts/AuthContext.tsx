@@ -1,6 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 
 export const ROLES = [
   'Claim Intimation',
@@ -47,28 +53,46 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role | null>(() => {
-    const saved = localStorage.getItem('slic_role');
-    return saved ? (saved as Role) : null;
-  });
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem('slic_role');
-    const key = saved ? `slic_dark_mode_${saved}` : 'slic_dark_mode';
-    return localStorage.getItem(key) === 'true';
-  });
+  // ✅ SAFE initial state (no localStorage here)
+  const [role, setRole] = useState<Role | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
 
+  // ✅ Load from localStorage ONLY in browser
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedRole = localStorage.getItem('slic_role');
+
+      if (savedRole) {
+        const roleValue = savedRole as Role;
+        setRole(roleValue);
+
+        const darkKey = `slic_dark_mode_${roleValue}`;
+        const savedDark = localStorage.getItem(darkKey) === 'true';
+        setDarkMode(savedDark);
+      } else {
+        const savedDark = localStorage.getItem('slic_dark_mode') === 'true';
+        setDarkMode(savedDark);
+      }
+    }
+  }, []);
+
+  // ✅ Apply dark mode to HTML
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
 
-  const login = (r: Role, _password: string) => {
-    if (_password.length >= 4) {
+  const login = (r: Role, password: string) => {
+    if (password.length >= 4) {
       setRole(r);
-      localStorage.setItem('slic_role', r);
-      // Load user-specific dark mode preference
-      const userDarkKey = `slic_dark_mode_${r}`;
-      const userDark = localStorage.getItem(userDarkKey) === 'true';
-      setDarkMode(userDark);
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('slic_role', r);
+
+        const userDarkKey = `slic_dark_mode_${r}`;
+        const userDark = localStorage.getItem(userDarkKey) === 'true';
+        setDarkMode(userDark);
+      }
+
       return true;
     }
     return false;
@@ -76,20 +100,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setRole(null);
-    localStorage.removeItem('slic_role');
+
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('slic_role');
+    }
   };
 
   const toggleDarkMode = () => {
     setDarkMode(prev => {
       const next = !prev;
-      const key = role ? `slic_dark_mode_${role}` : 'slic_dark_mode';
-      localStorage.setItem(key, String(next));
+
+      if (typeof window !== 'undefined') {
+        const key = role
+          ? `slic_dark_mode_${role}`
+          : 'slic_dark_mode';
+
+        localStorage.setItem(key, String(next));
+      }
+
       return next;
     });
   };
 
   return (
-    <AuthContext.Provider value={{ role, darkMode, login, logout, toggleDarkMode }}>
+    <AuthContext.Provider
+      value={{ role, darkMode, login, logout, toggleDarkMode }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -97,6 +133,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+
+  // ✅ Prevent crash during SSR / prerender
+  if (!ctx) {
+    return {
+      role: null,
+      darkMode: false,
+      login: () => false,
+      logout: () => {},
+      toggleDarkMode: () => {},
+    };
+  }
+
   return ctx;
 }

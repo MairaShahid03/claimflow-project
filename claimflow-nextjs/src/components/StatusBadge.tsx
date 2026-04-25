@@ -8,7 +8,7 @@ interface StatusBadgeProps {
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
   const isCompleted = status === 'Completed';
-  const isPending = status === 'Pending';
+  
   const isError = ['Missing', 'Error', 'Objected', 'Disapproved', 'Rejected'].includes(status);
 
   if (isCompleted) {

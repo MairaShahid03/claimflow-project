@@ -102,7 +102,7 @@ export default function RequirementsManager() {
     setMissingInlineClaim(claimNo);
   };
 
-  const handleInlineGenerate = async (docs: string[], department: string) => {
+  const handleInlineGenerate = async (docs: string[], _department: string) =>  {
     if (!missingInlineClaim) return;
     setLoading(true);
     await supabase.from('workflow_history').insert({ claim_no: missingInlineClaim, department: STAGE_KEY, action: 'missing' });
