@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ROLE_TO_STAGE, getRoleDisplayName } from '@/lib/stageMapping';
+import { ROLE_TO_STAGE } from '@/lib/stageMapping';
 import { useRouter } from 'next/navigation';
 import { Bell, Moon, Sun, ChevronDown, Settings, LogOut } from 'lucide-react';
 
