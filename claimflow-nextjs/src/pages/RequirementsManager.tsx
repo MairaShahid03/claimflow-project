@@ -34,7 +34,7 @@ export default function RequirementsManager() {
   const fetchClaims = useCallback(async () => {
     const [pendingRes, historyRes] = await Promise.all([
       supabase.from('claims').select('*').eq('current_stage', STAGE_KEY),
-      supabase.from('workflow_history').select('*').eq('department', STAGE_KEY),
+      supabase.from('workflow_history').select('*').eq('department', STAGE_KEY).order('action_time', { ascending: true }),
     ]);
 
     const pendingClaims = pendingRes.data || [];
@@ -93,7 +93,7 @@ export default function RequirementsManager() {
       await supabase.from('claims').update({ current_stage: nextStage, status: 'completed' }).eq('claim_no', claimNo);
       await supabase.from('notifications').insert({ claim_no: claimNo, department: nextStage, message: `Claim ${claimNo}: Ready for ${getRoleDisplayName(nextStage)} review.` });
     }
-    toast({ title: 'Completed', description: `Claim ${claimNo} marked as completed.` });
+    toast({ title: 'Completed', description: `Claim ${claimNo} marked as completed.`, duration: 1000 });
     setLoading(false);
     await fetchClaims();
   };
@@ -111,6 +111,7 @@ export default function RequirementsManager() {
       await supabase.from('missing_documents').insert({ claim_no: missingInlineClaim, document_name: doc });
     }
     setLoading(false);
+    setMissingInlineClaim(null);
     await fetchClaims();
   };
 
@@ -190,6 +191,13 @@ export default function RequirementsManager() {
                       <div className="flex gap-2">
                         <button onClick={() => handleComplete(c.claim_no)} disabled={loading} className="action-btn">Completed</button>
                         <button onClick={() => handleMissing(c.claim_no)} disabled={loading} className="action-btn-error">Missing</button>
+                      </div>
+                    ) : (displayStatus === 'Missing' && c.current_stage === STAGE_KEY) ? (
+                      <div className="flex gap-2 items-center">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 mr-1">
+                          <XCircle size={20} className="text-destructive" />
+                        </span>
+                        <button onClick={() => handleComplete(c.claim_no)} disabled={loading} className="action-btn">Completed</button>
                       </div>
                     ) : displayStatus === 'Completed' ? (
                       <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30">

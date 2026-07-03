@@ -38,6 +38,18 @@ interface HistoryRow {
   action_time: string | null;
 }
 
+const mapActionToStatus = (action: string | null): ClaimStatus => {
+  if (!action) return 'Pending';
+  const lower = action.toLowerCase();
+  if (lower === 'completed') return 'Completed';
+  if (lower === 'missing') return 'Missing';
+  if (lower === 'error') return 'Error';
+  if (lower === 'objected') return 'Objected';
+  if (lower === 'disapproved') return 'Disapproved';
+  if (lower === 'rejected') return 'Rejected';
+  return 'Pending';
+};
+
 export default function ZonalHead() {
   const [allClaims, setAllClaims] = useState<ClaimRow[]>([]);
   const [allHistory, setAllHistory] = useState<HistoryRow[]>([]);
@@ -295,7 +307,7 @@ export default function ZonalHead() {
             <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border text-sm">
               <span className="font-mono text-status-info text-xs">{a.claim_no}</span>
               <span className="text-muted-foreground text-xs">{getRoleDisplayName(a.department || '')}</span>
-              <StatusBadge status={(a.action === 'completed' ? 'Completed' : a.action === 'missing' ? 'Missing' : 'Error') as ClaimStatus} />
+              <StatusBadge status={mapActionToStatus(a.action)} />
               <span className="text-muted-foreground text-xs ml-auto">{a.action_time ? new Date(a.action_time).toLocaleString() : '—'}</span>
             </div>
           ))}
@@ -314,7 +326,7 @@ export default function ZonalHead() {
               <div className="flex items-center gap-3">
                 {expandedClaim === c.claim_no ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                 <span className="font-mono font-semibold text-status-info text-sm">{c.claim_no}</span>
-                <StatusBadge status={(c.status === 'completed' ? 'Completed' : c.status === 'missing' ? 'Missing' : c.status ? 'Error' : 'Pending') as ClaimStatus} />
+                <StatusBadge status={mapActionToStatus(c.status)} />
               </div>
               <span className="text-xs text-muted-foreground">{(claimHistoryMap[c.claim_no] || []).length} stages</span>
             </button>

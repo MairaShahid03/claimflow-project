@@ -5,7 +5,7 @@ import StatusBadge from '@/components/StatusBadge';
 import { Role } from '@/contexts/AuthContext';
 import { ClaimStatus } from '@/contexts/ClaimContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ROLE_TO_STAGE, getNextStage, getRoleDisplayName } from '@/lib/stageMapping';
+import { ROLE_TO_STAGE, getNextStage, getPreviousStage, getRoleDisplayName } from '@/lib/stageMapping';
 import { FileText, Clock, CheckCircle, AlertCircle, Search, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
@@ -74,18 +74,44 @@ export default function WorkflowDashboard({
       historicalClaims = data || [];
     }
 
-    // Build history lookup
-    const historyMap: Record<string, WorkflowHistoryRow> = {};
+    // Build history lookup for this department
+    const deptHistoryMap: Record<string, WorkflowHistoryRow> = {};
     history.forEach(h => {
-      historyMap[h.claim_no] = h; // latest one wins
+      deptHistoryMap[h.claim_no] = h;
     });
 
-    const allClaims = [...pendingClaims, ...historicalClaims].map(c => ({
-      ...c,
-      historyAction: historyMap[c.claim_no]?.action || undefined,
-      historyReason: historyMap[c.claim_no]?.reason || undefined,
-      historyTime: historyMap[c.claim_no]?.action_time || undefined,
-    }));
+    const claimNos = [...new Set([...pendingClaims.map(c => c.claim_no), ...historicalClaims.map(c => c.claim_no)])];
+
+    // Build latest overall history lookup to find the latest reason/action
+    let latestHistoryMap: Record<string, WorkflowHistoryRow> = {};
+    if (claimNos.length > 0) {
+      const { data: overallHistory } = await supabase
+        .from('workflow_history')
+        .select('*')
+        .in('claim_no', claimNos)
+        .order('action_time', { ascending: false });
+
+      if (overallHistory) {
+        overallHistory.forEach(h => {
+          if (!latestHistoryMap[h.claim_no]) {
+            latestHistoryMap[h.claim_no] = h;
+          }
+        });
+      }
+    }
+
+    const allClaims = [...pendingClaims, ...historicalClaims].map(c => {
+      const isPending = c.current_stage === stageKey;
+      const deptHistory = deptHistoryMap[c.claim_no];
+      const latestHistory = latestHistoryMap[c.claim_no];
+
+      return {
+        ...c,
+        historyAction: isPending ? undefined : (deptHistory?.action || undefined),
+        historyReason: isPending ? (latestHistory?.reason || undefined) : (deptHistory?.reason || undefined),
+        historyTime: isPending ? (latestHistory?.action_time || undefined) : (deptHistory?.action_time || undefined),
+      };
+    });
 
     // Sort: pending first, then by created_at desc
     allClaims.sort((a, b) => {
@@ -156,24 +182,21 @@ export default function WorkflowDashboard({
       }).eq('claim_no', claimNo);
     }
 
-    toast({ title: 'Success', description: `Claim ${claimNo} marked as completed.` });
+    toast({ title: 'Success', description: `Claim ${claimNo} marked as completed.`, duration: 1000 });
     setLoading(false);
     await fetchClaims();
   };
 
   const handleError = (claimNo: string) => {
-    if (requiresReason) {
-      setReasonModal(claimNo);
-      setReason('');
-    } else {
-      submitError(claimNo);
-    }
+    setReasonModal(claimNo);
+    setReason('');
   };
 
   const submitError = async (claimNo: string, errorReason?: string) => {
     setLoading(true);
     const errorStatus = actions.error!.status.toLowerCase();
 
+    // Insert workflow history
     await supabase.from('workflow_history').insert({
       claim_no: claimNo,
       department: stageKey,
@@ -181,12 +204,29 @@ export default function WorkflowDashboard({
       reason: errorReason || null,
     });
 
-    // Don't move to next stage on error
-    await supabase.from('claims').update({
-      status: errorStatus,
-    }).eq('claim_no', claimNo);
+    const prevStage = getPreviousStage(stageKey);
 
-    toast({ title: actions.error!.label, description: `Claim ${claimNo} marked as ${errorStatus}.` });
+    if (prevStage) {
+      // Update claim to previous stage
+      await supabase.from('claims').update({
+        current_stage: prevStage,
+        status: errorStatus,
+      }).eq('claim_no', claimNo);
+
+      // Notify previous role
+      await supabase.from('notifications').insert({
+        claim_no: claimNo,
+        department: prevStage,
+        message: `Claim ${claimNo} returned to your stage with status: ${actions.error!.label}. Reason: ${errorReason || 'None'}`,
+      });
+    } else {
+      // If there is no previous stage, keep it at current stage but update status
+      await supabase.from('claims').update({
+        status: errorStatus,
+      }).eq('claim_no', claimNo);
+    }
+
+    toast({ title: actions.error!.label, description: `Claim ${claimNo} marked as ${errorStatus} and returned to previous stage.`, duration: 1000 });
     setLoading(false);
     setReasonModal(null);
     await fetchClaims();
@@ -199,7 +239,16 @@ export default function WorkflowDashboard({
   };
 
   const getDisplayStatus = (c: typeof claims[0]): ClaimStatus => {
-    if (!c.historyAction) return 'Pending';
+    if (!c.historyAction) {
+      if (c.current_stage === stageKey) {
+        const dbStatus = c.status;
+        if (dbStatus === 'objected') return 'Objected';
+        if (dbStatus === 'error') return 'Error';
+        if (dbStatus === 'missing') return 'Missing';
+        return 'Pending';
+      }
+      return 'Pending';
+    }
     if (c.historyAction === 'completed') return 'Completed';
     if (c.historyAction === 'error') return 'Error';
     if (c.historyAction === 'objected') return 'Objected';

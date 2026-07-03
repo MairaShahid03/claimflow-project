@@ -42,6 +42,12 @@ export function getNextStage(currentStage: string): string | null {
   return WORKFLOW_ORDER[idx + 1];
 }
 
+export function getPreviousStage(currentStage: string): string | null {
+  const idx = WORKFLOW_ORDER.indexOf(currentStage);
+  if (idx === -1 || idx <= 0) return null;
+  return WORKFLOW_ORDER[idx - 1];
+}
+
 export function getRoleDisplayName(stage: string): string {
   return STAGE_TO_ROLE[stage] || stage;
 }

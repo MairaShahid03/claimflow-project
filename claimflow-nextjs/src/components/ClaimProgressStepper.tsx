@@ -27,10 +27,11 @@ export default function ClaimProgressStepper({ currentStage, completedStages }: 
 
   const getStatus = (idx: number, stageKey: string): 'completed' | 'active' | 'pending' => {
     if (isDispatched) return 'completed';
+    if (currentIdx !== -1 && idx === currentIdx) return 'active';
+    if (currentIdx !== -1 && idx > currentIdx) return 'pending';
     if (completedStages?.includes(stageKey)) return 'completed';
     if (currentIdx === -1) return 'pending';
     if (idx < currentIdx) return 'completed';
-    if (idx === currentIdx) return 'active';
     return 'pending';
   };
 

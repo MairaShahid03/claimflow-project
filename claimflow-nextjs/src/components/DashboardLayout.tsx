@@ -53,6 +53,15 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read_status: true } : n));
   };
 
+  const markAllRead = async () => {
+    if (!stageKey) return;
+    await supabase.from('notifications')
+      .update({ read_status: true })
+      .eq('department', stageKey)
+      .eq('read_status', false);
+    setNotifications(prev => prev.map(n => ({ ...n, read_status: true })));
+  };
+
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
@@ -85,7 +94,13 @@ export default function DashboardLayout({ children, title, subtitle }: Dashboard
 
           {/* Notifications */}
           <div className="relative" ref={notifRef}>
-            <button onClick={() => { setNotifOpen(!notifOpen); if (!notifOpen) fetchNotifications(); }}
+            <button onClick={() => {
+              const nextOpen = !notifOpen;
+              setNotifOpen(nextOpen);
+              if (nextOpen) {
+                fetchNotifications().then(() => markAllRead());
+              }
+            }}
               className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition relative">
               <Bell size={18} />
               {unreadCount > 0 && (
